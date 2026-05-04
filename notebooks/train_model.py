@@ -201,3 +201,34 @@ diagnostic=model_loaded.predict(
 )[0]
 
 print("Diagnostic :",diagnostic)
+
+
+# -------- EXERCICE 1 --------
+
+print("\nImportance des features:")
+
+importances=model.feature_importances_
+
+for name,imp in sorted(
+zip(feature_cols,importances),
+key=lambda x:x[1],
+reverse=True
+):
+    print(f"{name:20s} : {imp:.3f}")
+
+
+# -------- EXERCICE 2 --------
+
+patients=[
+
+[20,1,37.0,120,0,0,0,0],
+[35,0,40.2,110,1,1,1,0],
+[70,1,38.5,130,1,1,0,0]
+
+]
+
+for i,p in enumerate(patients,1):
+    pred=model.predict([p])[0]
+    print(f"Patient {i} --> {pred}"
+    
+)
