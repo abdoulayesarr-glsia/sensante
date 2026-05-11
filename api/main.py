@@ -35,6 +35,16 @@ app = FastAPI(
     description="Assistant pré-diagnostic médical",
     version="0.2.0"
 )
+from fastapi.middleware.cors import CORSMiddleware
+
+# Autoriser les requêtes depuis le frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # En dev : tout accepter
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ==============================
 # 3. CHARGEMENT DU MODELE
