@@ -1,5 +1,5 @@
 # api/main.py
-# SenSante API - Lab 3
+# SenSante API - Lab 6
 
 import os
 import joblib
@@ -10,6 +10,8 @@ from groq import Groq
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from pydantic import BaseModel, Field
 
@@ -162,7 +164,6 @@ def health_check():
 @app.post("/predict", response_model=DiagnosticOutput)
 def predict(patient: PatientInput):
 
-    # Encoder sexe
     try:
         sexe_enc = le_sexe.transform([patient.sexe])[0]
     except:
@@ -173,7 +174,6 @@ def predict(patient: PatientInput):
             message=f"Sexe invalide : {patient.sexe}"
         )
 
-    # Encoder région
     try:
         region_enc = le_region.transform([patient.region])[0]
     except:
@@ -184,7 +184,6 @@ def predict(patient: PatientInput):
             message=f"Région inconnue : {patient.region}"
         )
 
-    # Construire les features
     features = np.array([[
         patient.age,
         sexe_enc,
@@ -196,13 +195,11 @@ def predict(patient: PatientInput):
         region_enc
     ]])
 
-    # Prédiction
     diagnostic = model.predict(features)[0]
 
     proba = model.predict_proba(features)[0]
     proba_max = float(proba.max())
 
-    # Niveau de confiance
     if proba_max >= 0.7:
         confiance = "haute"
     elif proba_max >= 0.4:
@@ -210,7 +207,6 @@ def predict(patient: PatientInput):
     else:
         confiance = "faible"
 
-    # Messages
     messages = {
         "palu": "Suspicion de paludisme. Consultez rapidement.",
         "grippe": "Suspicion de grippe. Repos et hydratation.",
@@ -244,7 +240,6 @@ def explain(data: ExplainInput):
             modele_llm="aucun"
         )
 
-    # Construire le prompt utilisateur
     user_prompt = (
         f"Patient : {data.sexe}, "
         f"{data.age} ans, région {data.region}\n"
@@ -283,3 +278,18 @@ def explain(data: ExplainInput):
             explication=f"Erreur lors de l'appel au LLM : {str(e)}",
             modele_llm="erreur"
         )
+
+# =====================================
+# 11. SERVIR LE FRONTEND
+# =====================================
+
+app.mount(
+    "/static",
+    StaticFiles(directory="frontend"),
+    name="static"
+)
+
+@app.get("/")
+def serve_frontend():
+    """Servir la page d'accueil."""
+    return FileResponse("frontend/index.html")
